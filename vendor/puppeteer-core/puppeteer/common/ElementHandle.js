@@ -659,46 +659,9 @@ export class ElementHandle extends JSHandle {
       filePaths.length <= 1 || isMultiple,
       "Multiple file uploads only work with <input type=file multiple>",
     );
-    // Locate all files and confirm that they exist.
-    let path;
-    try {
-      path = await import("path");
-    } catch (error) {
-      if (error instanceof TypeError) {
-        throw new Error(
-          `JSHandle#uploadFile can only be used in Node-like environments.`,
-        );
-      }
-      throw error;
-    }
-    const files = filePaths.map((filePath) => {
-      if (path.win32.isAbsolute(filePath) || path.posix.isAbsolute(filePath)) {
-        return filePath;
-      } else {
-        return path.resolve(filePath);
-      }
-    });
-    const { objectId } = this.remoteObject();
-    const { node } = await this.client.send("DOM.describeNode", { objectId });
-    const { backendNodeId } = node;
-    /*  The zero-length array is a special case, it seems that
-             DOM.setFileInputFiles does not actually update the files in that case,
-             so the solution is to eval the element value to a new FileList directly.
-         */
-    if (files.length === 0) {
-      await this.evaluate((element) => {
-        element.files = new DataTransfer().files;
-        // Dispatch events for this case because it should behave akin to a user action.
-        element.dispatchEvent(new Event("input", { bubbles: true }));
-        element.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-    } else {
-      await this.client.send("DOM.setFileInputFiles", {
-        objectId,
-        files,
-        backendNodeId,
-      });
-    }
+    throw new Error(
+      `JSHandle#uploadFile can only be used in Node-like environments.`,
+    );
   }
   /**
    * This method scrolls element into view if needed, and then uses
